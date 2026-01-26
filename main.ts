@@ -1,69 +1,104 @@
+export class User {
+    private _username: string;
+    private _password: string;
+
+    constructor(username:string, password:string) {
+        this._username = username;
+        this._password = password;
+    }
+
+    get username(): string {
+        return this._username
+    }
+
+    get password(): string {
+        return this._password
+    }
+
+    set username(newName: string) {
+        this._username = newName;
+    }
+
+    set password(newPassword: string) {
+        this._password = newPassword
+    }
+}
+
 const usernameInput = document.getElementById('username') as HTMLInputElement;
 const passwordInput = document.getElementById('password') as HTMLInputElement;
 
 const loginBtn = document.getElementById('login') as HTMLButtonElement;
 const registerBtn = document.getElementById('register') as HTMLButtonElement;
 
-type User = {
-    username: string;
-    password: string;
-}
+let systemResponse: [number, string];
 
-const handleRegister = (username: string, password: string) => {
+const getUsersFromStorage = (): User[] => {
     const rawData = localStorage.getItem('users');
-    const users: User[] = rawData ? JSON.parse(rawData) : [];
+    if (!rawData) return [];
 
-    const userExists = users.some(user => user.username === username)
-    
-    if (userExists) {
-        alert("That username is already taken");
-        return;
-    }
+    const data = JSON.parse(rawData);
+    return data.map((u:any) => new User(u._username, u._password));
+};
 
-    users.push({username, password});
-    localStorage.setItem('users', JSON.stringify(users));
-
-    alert("User registered successfully!");
-}
-
-registerBtn.addEventListener('click', () => {
-    const user = usernameInput.value.trim();
-    const pass = passwordInput.value.trim();
-
-    if (user && pass) {
-        handleRegister(user, pass);
-    }
-    else {
+const handleRegister = (user: string, pass: string): void => {
+    if (!user || !pass) {
         alert("Please fill out both fields");
-    }
-});
-
-const handleLogin = (username: string, password: string) => {
-    const rawData = localStorage.getItem('users');
-    const users: User[] = rawData ? JSON.parse(rawData) : [];
-
-    const user = users.find(user => user.username === username)
-
-        if (!user || user.password != password) {
-        alert("Invalid username or password.");
         return;
     }
-        alert("Login Successful.");
 
-        localStorage.setItem('currentUser', username);
-        localStorage.setItem('currentPass', password);
+    const users = getUsersFromStorage();
+    const userExists = users.some(u => u.username === user);
 
-        window.location.href = 'profile.html';
+    if (userExists) {
+        alert("Username already taken");
+        return;
+    }
+
+    const newUser = new User(user, pass);
+    users.push(newUser);
+
+    localStorage.setItem('users', JSON.stringify(users));
+    alert("Registered successfully!");
+    
+    usernameInput.value = "";
+    passwordInput.value = "";
+};
+
+if (registerBtn){
+    registerBtn.addEventListener('click', () => {
+        if (usernameInput.value && passwordInput.value) {
+            handleRegister(usernameInput.value.trim(), passwordInput.value.trim());
+        }
+    });
 }
 
-loginBtn.addEventListener('click', () => {
-    const user = usernameInput.value.trim();
-    const pass = passwordInput.value.trim();
+const handleLogin = (user: string, pass: string): void => {
+    const users = getUsersFromStorage();
+    const foundUser = users.find(u => u.username === user);
 
-    if (user && pass) {
-        handleLogin(user, pass);
+
+    if (!foundUser || foundUser.password !== pass) {
+    systemResponse = [401, "Invalid login credentials"]
+    alert(systemResponse[1])
+    return;
     }
-});
+    alert("Login Successful.");
+
+    localStorage.setItem('currentUser', JSON.stringify({
+        _username: foundUser.username,
+        _password: foundUser.password
+    }))
+
+    window.location.href = 'profile.html';
+}
+
+if (loginBtn){ 
+    loginBtn.addEventListener('click', () => {
+        if (usernameInput.value && passwordInput.value) {
+            handleLogin(usernameInput.value.trim(), passwordInput.value.trim())
+        }
+    });
+}
 
 
 
