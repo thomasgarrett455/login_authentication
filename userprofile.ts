@@ -1,8 +1,15 @@
 import { User } from './main.js'
 
-const displayUsername = document.getElementById('username-display') as HTMLElement
-const displayPass = document.getElementById('password-display') as HTMLElement
-const toggleBtn = document.getElementById('toggle-password');
+const displayUsername = document.getElementById('username-display') as HTMLElement;
+const displayPass = document.getElementById('password-display') as HTMLElement;
+const toggleBtn = document.getElementById('toggle-password') as HTMLElement;
+
+const changeUsernameLink = document.getElementById('change-username') as HTMLElement | null;
+
+const newUsernameInput = document.getElementById('newusername') as HTMLInputElement | null;
+const changeUsernameButton = document.getElementById('changeusername') as HTMLElement | null;
+
+const username = localStorage.getItem('currentUsername')
 
 const handleUserInfo = (rawData: string | null): User | null =>{
     if (!rawData) return null;
@@ -21,10 +28,16 @@ const userInstance = handleUserInfo(rawData)
 
 let isPasswordVisible = false;
 
-if (displayUsername && userInstance) {
-    displayUsername.textContent = userInstance.username;
-} else if (displayUsername) {
-    displayUsername.textContent = "Not available";
+if (displayUsername) {
+    if (username) {
+        // Prefer the latest username from localStorage
+        displayUsername.textContent = username;
+    } else if (userInstance) {
+        // Fallback to username from stored user object (if present)
+        displayUsername.textContent = userInstance.username;
+    } else {
+        displayUsername.textContent = "Not available";
+    }
 }
 
 if (displayPass && toggleBtn && userInstance) {
@@ -44,4 +57,38 @@ if (displayPass && toggleBtn && userInstance) {
     });
 } else if (displayPass) {
     displayPass.textContent = "Not available";
+}
+
+if (changeUsernameLink){
+    changeUsernameLink.addEventListener('click', () => {
+        window.location.href = 'changeusername.html'
+    })
+}
+
+if (changeUsernameButton){
+    changeUsernameButton.addEventListener('click', () => {
+        if (!newUsernameInput || !newUsernameInput.value.trim()) {
+            alert("Please enter a new username");
+            return;
+        }
+        funchangeUsername(newUsernameInput.value.trim(), username);
+    })
+}
+
+const funchangeUsername = async (newusername: string, username: string | null) => {
+    if (!username) {
+        console.warn("No current username found to change.");
+        return;
+    }
+
+    const res = await fetch('http://localhost:3000/changeusername', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({ newusername, username })
+    });
+
+    if (res) {
+        localStorage.setItem('currentUsername', newusername)
+        window.location.href = 'profile.html'
+    }
 }

@@ -2,6 +2,10 @@ import { User } from './main.js';
 const displayUsername = document.getElementById('username-display');
 const displayPass = document.getElementById('password-display');
 const toggleBtn = document.getElementById('toggle-password');
+const changeUsernameLink = document.getElementById('change-username');
+const newUsernameInput = document.getElementById('newusername');
+const changeUsernameButton = document.getElementById('changeusername');
+const username = localStorage.getItem('currentUsername');
 const handleUserInfo = (rawData) => {
     if (!rawData)
         return null;
@@ -18,14 +22,20 @@ const handleUserInfo = (rawData) => {
 const rawData = localStorage.getItem('currentUser');
 const userInstance = handleUserInfo(rawData);
 let isPasswordVisible = false;
-if (displayUsername && userInstance) {
-    displayUsername.textContent = userInstance.username;
-}
-else if (displayUsername) {
-    displayUsername.textContent = "Not available";
+if (displayUsername) {
+    if (username) {
+        // Prefer the latest username from localStorage
+        displayUsername.textContent = username;
+    }
+    else if (userInstance) {
+        // Fallback to username from stored user object (if present)
+        displayUsername.textContent = userInstance.username;
+    }
+    else {
+        displayUsername.textContent = "Not available";
+    }
 }
 if (displayPass && toggleBtn && userInstance) {
-    // Initialize password display with hidden state
     displayPass.textContent = "*******";
     toggleBtn.addEventListener('click', () => {
         isPasswordVisible = !isPasswordVisible;
@@ -42,23 +52,32 @@ if (displayPass && toggleBtn && userInstance) {
 else if (displayPass) {
     displayPass.textContent = "Not available";
 }
-// import { User } from './main.js';
-// const displayUsername = document.getElementById('username-display');
-// const displayPass = document.getElementById('password-display');
-// const rawData = localStorage.getItem('currentUser');
-// if (!rawData) {
-//     console.warn("DEBUG: No data found in LocalStorage for 'currentUser'");
-// } else {
-//     const parsed = JSON.parse(rawData);
-//     console.log("DEBUG: Parsed data from storage:", parsed);
-//     // Make sure we use the keys that actually exist in the JSON (_username)
-//     const userInstance = new User(parsed._username, parsed._password);
-//     console.log("DEBUG: User Instance created:", userInstance);
-//     console.log("DEBUG: Getter check:", userInstance.username);
-//     if (displayUsername) {
-//         displayUsername.textContent = userInstance.username;
-//         console.log("DEBUG: Successfully set username textContent");
-//     } else {
-//         console.error("DEBUG: Could not find HTML element with ID 'username-display'");
-//     }
-// }
+if (changeUsernameLink) {
+    changeUsernameLink.addEventListener('click', () => {
+        window.location.href = 'changeusername.html';
+    });
+}
+if (changeUsernameButton) {
+    changeUsernameButton.addEventListener('click', () => {
+        if (!newUsernameInput || !newUsernameInput.value.trim()) {
+            alert("Please enter a new username");
+            return;
+        }
+        funchangeUsername(newUsernameInput.value.trim(), username);
+    });
+}
+const funchangeUsername = async (newusername, username) => {
+    if (!username) {
+        console.warn("No current username found to change.");
+        return;
+    }
+    const res = await fetch('http://localhost:3000/changeusername', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newusername, username })
+    });
+    if (res) {
+        localStorage.setItem('currentUsername', newusername);
+        window.location.href = 'profile.html';
+    }
+};

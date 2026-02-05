@@ -21,30 +21,18 @@ const passwordInput = document.getElementById('password');
 const loginBtn = document.getElementById('login');
 const registerBtn = document.getElementById('register');
 let systemResponse;
-const getUsersFromStorage = () => {
-    const rawData = localStorage.getItem('users');
-    if (!rawData)
-        return [];
-    const data = JSON.parse(rawData);
-    return data.map((u) => new User(u._username, u._password));
-};
-const handleRegister = (user, pass) => {
-    if (!user || !pass) {
+const handleRegister = async (user, pass) => {
+    const res = await fetch('http://localhost:3000/register', {
+        method: 'POST',
+        headers: { "Content-Type": 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+    });
+    if (!res.ok) {
         alert("Please fill out both fields");
         return;
     }
-    const users = getUsersFromStorage();
-    const userExists = users.some(u => u.username === user);
-    if (userExists) {
-        alert("Username already taken");
-        return;
-    }
-    const newUser = new User(user, pass);
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    alert("Registered successfully!");
-    usernameInput.value = "";
-    passwordInput.value = "";
+    alert("Resgistration Successful");
+    window.location.href = 'profile.html';
 };
 if (registerBtn) {
     registerBtn.addEventListener('click', () => {
@@ -53,19 +41,18 @@ if (registerBtn) {
         }
     });
 }
-const handleLogin = (user, pass) => {
-    const users = getUsersFromStorage();
-    const foundUser = users.find(u => u.username === user);
-    if (!foundUser || foundUser.password !== pass) {
-        systemResponse = [401, "Invalid login credentials"];
-        alert(systemResponse[1]);
+const handleLogin = async (user, pass) => {
+    const res = await fetch("http://localhost:3000/login", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+    });
+    if (!res.ok) {
+        alert("Invalid Login Credentials");
         return;
     }
-    alert("Login Successful.");
-    localStorage.setItem('currentUser', JSON.stringify({
-        _username: foundUser.username,
-        _password: foundUser.password
-    }));
+    alert('Login Successful');
+    localStorage.setItem('currentUsername', user);
     window.location.href = 'profile.html';
 };
 if (loginBtn) {
