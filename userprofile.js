@@ -6,6 +6,11 @@ const changeUsernameLink = document.getElementById('change-username');
 const newUsernameInput = document.getElementById('newusername');
 const changeUsernameButton = document.getElementById('changeusername');
 const username = localStorage.getItem('currentUsername');
+const changePasswordLink = document.getElementById('change-password');
+const changePasswordButton = document.getElementById('changepassword');
+const oldpassword = document.getElementById('oldpassword');
+const newpassword = document.getElementById('newpassword');
+const confirmnewpassword = document.getElementById('confirmnewpassword');
 const handleUserInfo = (rawData) => {
     if (!rawData)
         return null;
@@ -81,3 +86,45 @@ const funchangeUsername = async (newusername, username) => {
         window.location.href = 'profile.html';
     }
 };
+if (changePasswordLink) {
+    changePasswordLink.addEventListener('click', () => {
+        window.location.href = 'changepassword.html';
+    });
+}
+const funchangePassword = async (username, oldpassword, newpassword, confirmnewpassword) => {
+    if (!username) {
+        console.warn("No current user found");
+        return;
+    }
+    const res = await fetch('http://localhost:3000/checkpassword', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, oldpassword })
+    });
+    const data = await res.json();
+    console.log("Server Response: ", data);
+    if (data.success === true) {
+        alert("Passwords match");
+    }
+    else {
+        alert("passwords do not match");
+    }
+};
+if (changePasswordButton) {
+    changePasswordButton.addEventListener('click', () => {
+        const oldpassword1 = oldpassword === null || oldpassword === void 0 ? void 0 : oldpassword.value.trim();
+        const newpassword1 = newpassword === null || newpassword === void 0 ? void 0 : newpassword.value.trim();
+        const confirmnewpassword1 = confirmnewpassword === null || confirmnewpassword === void 0 ? void 0 : confirmnewpassword.value.trim();
+        if (!oldpassword1 ||
+            !newpassword1 ||
+            !confirmnewpassword1) {
+            alert("Please fill out all fields");
+            return;
+        }
+        if (newpassword1 !== confirmnewpassword1) {
+            alert("New password fields must match");
+            return;
+        }
+        funchangePassword(username, oldpassword1, newpassword1, confirmnewpassword1);
+    });
+}

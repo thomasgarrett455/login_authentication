@@ -39,6 +39,22 @@ app.post('/changeusername', async (req, res) => {
         res.status(500).json({ error: 'Database error' });
     }
 });
+app.post('/checkpassword', async (req, res) => {
+    const { username, oldpassword } = req.body;
+    try {
+        const [rows] = await pool.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, oldpassword]);
+        if (Array.isArray(rows) && rows.length > 0) {
+            res.json({ success: true });
+        }
+        else {
+            res.json({ success: false });
+        }
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
 app.listen(3000, () => {
     console.log('server running on port 3000');
 });

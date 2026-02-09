@@ -5,11 +5,17 @@ const displayPass = document.getElementById('password-display') as HTMLElement;
 const toggleBtn = document.getElementById('toggle-password') as HTMLElement;
 
 const changeUsernameLink = document.getElementById('change-username') as HTMLElement | null;
-
 const newUsernameInput = document.getElementById('newusername') as HTMLInputElement | null;
 const changeUsernameButton = document.getElementById('changeusername') as HTMLElement | null;
-
 const username = localStorage.getItem('currentUsername')
+
+const changePasswordLink = document.getElementById('change-password') as HTMLElement | null;
+const changePasswordButton = document.getElementById('changepassword') as HTMLElement | null;
+const oldpassword = document.getElementById('oldpassword') as HTMLInputElement | null;
+const newpassword = document.getElementById('newpassword') as HTMLInputElement | null;
+const confirmnewpassword = document.getElementById('confirmnewpassword') as HTMLInputElement | null;
+
+
 
 const handleUserInfo = (rawData: string | null): User | null =>{
     if (!rawData) return null;
@@ -91,4 +97,57 @@ const funchangeUsername = async (newusername: string, username: string | null) =
         localStorage.setItem('currentUsername', newusername)
         window.location.href = 'profile.html'
     }
+}
+
+if (changePasswordLink) {
+    changePasswordLink.addEventListener('click', () => {
+        window.location.href = 'changepassword.html'
+    })
+}
+
+const funchangePassword = async (username: string | null, oldpassword: string, newpassword: string, confirmnewpassword: string) => {
+    if (!username) {
+        console.warn("No current user found");
+        return;
+    }
+
+    const res = await fetch('http://localhost:3000/checkpassword', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({username, oldpassword})
+    });
+
+    const data = await res.json();
+    console.log("Server Response: ", data)
+
+    if (data.success === true){
+        alert("Passwords match")
+    }
+
+    else {
+        alert("passwords do not match")
+    }
+}
+
+if (changePasswordButton) {
+    changePasswordButton.addEventListener('click', () => {
+        const oldpassword1 = oldpassword?.value.trim()
+        const newpassword1 = newpassword?.value.trim()
+        const confirmnewpassword1 = confirmnewpassword?.value.trim()
+        if (
+            !oldpassword1 || 
+            !newpassword1 || 
+            !confirmnewpassword1){
+        alert("Please fill out all fields")
+        return;
+        }
+
+        if (newpassword1 !== confirmnewpassword1) {
+            alert("New password fields must match")
+            return;
+        }
+
+        funchangePassword(username, oldpassword1, newpassword1, confirmnewpassword1)
+
+    })
 }
